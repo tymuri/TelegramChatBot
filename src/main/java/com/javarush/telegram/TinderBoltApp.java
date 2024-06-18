@@ -29,6 +29,9 @@ public class TinderBoltApp extends MultiSessionTelegramBot {
         }
     }
 
+    private ChatGPTService chatGPT = new ChatGPTService(OPEN_AI_TOKEN);
+    private DialogMode currentMode = null;
+
     public TinderBoltApp() {
         super(TELEGRAM_BOT_NAME, TELEGRAM_BOT_TOKEN);
     }
@@ -37,10 +40,34 @@ public class TinderBoltApp extends MultiSessionTelegramBot {
     public void onUpdateEventReceived(Update update) {
         // TODO: the main functionality of the bot will be written here
         String message = getMessageText();
-        if (message.equals("/start") || message.equals("/Start")) {
+        if (message.equals("/start") || message.equals("/Start"))
+        {
+            currentMode = DialogMode.MAIN;
             sendPhotoMessage("bot_avatar");
             String text = loadMessage("main");
             sendTextMessage(text);
+            showMainMenu("Start", "/start",
+                    "Profile", "/profile",
+                    "Opener", "/opener",
+                    "Message", "/message",
+                    "Date", "/date",
+                    "ChatGPT", "/gpt");
+            return;
+        }
+
+        if(message.equals("/gpt") || message.equals("/Gpt"))
+        {
+            currentMode = DialogMode.GPT;
+            sendPhotoMessage("gpt");
+            sendTextMessage("Type your message to *ChatGPT*: ");
+            return;
+        }
+
+        if (currentMode == DialogMode.GPT)
+        {
+            String prompt = loadPrompt("gpt");
+            String answer = chatGPT.sendMessage(prompt, message);
+            sendTextMessage(answer);
             return;
         }
 
@@ -56,5 +83,11 @@ public class TinderBoltApp extends MultiSessionTelegramBot {
         telegramBotsApi.registerBot(new TinderBoltApp());
     }
 }
+
+
+
+
+
+
 
 
